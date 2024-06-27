@@ -2,35 +2,73 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Stock.Api.Data;
 using Stock.Api.Interfaces;
+using Stock.Api.Models;
 
 namespace Stock.Api.Repository
 {
-    public class StockRepository : IStockRepository
+    public class StockRepository(ApplicationDbContext context) : IStockRepository
     {
-        public Task<Stock> CreateAsync(Stock item)
+        private readonly ApplicationDbContext _context = context;
+        public async Task<StockModel> CreateAsync(StockModel stock)
         {
-            throw new NotImplementedException();
+            await _context.Stocks.AddAsync(stock);
+            await _context.SaveChangesAsync();
+
+            return stock;
         }
 
-        public Task<Stock> DeleteAsync(int id)
+        public async Task<StockModel?> DeleteAsync(int id)
         {
-            throw new NotImplementedException();
+            var stock = await _context.Stocks.FirstOrDefaultAsync(stock => stock.Id == id);
+
+            if (stock == null)
+                return null;
+
+            _context.Remove(stock);
+            await _context.SaveChangesAsync();
+
+            return stock;
         }
 
-        public Task<List<Stock>> GetAllAsync()
+        public async Task<List<StockModel>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            var stocks = await _context.Stocks.ToListAsync();
+
+            return stocks;
         }
 
-        public Task<Stock> GetByIdAsync(int id)
+        public async Task<StockModel?> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            var stock = await _context.Stocks.FirstOrDefaultAsync(s => s.Id == id);
+            if (stock == null)
+            {
+                return null;
+            }
+
+            return stock;
         }
 
-        public Task<Stock> UpdateAsync(int id, Stock item)
+        public async Task<StockModel?> UpdateAsync(int id, StockModel stock)
         {
-            throw new NotImplementedException();
+            var existingStock = await _context.Stocks.FirstOrDefaultAsync(s => s.Id == id);
+            if (existingStock == null)
+            {
+                return null;
+            }
+
+            existingStock.Symbol = stock.Symbol;
+            existingStock.CompanyName = stock.CompanyName;
+            existingStock.Purchase = stock.Purchase;
+            existingStock.LastDiv = stock.LastDiv;
+            existingStock.Industry = stock.Industry;
+            existingStock.MarketCap = stock.MarketCap;
+
+            await _context.SaveChangesAsync();
+
+            return existingStock;
         }
     }
 }
