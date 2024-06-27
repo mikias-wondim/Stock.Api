@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Stock.Api.Data;
+using Stock.Api.Helper;
 using Stock.Api.Interfaces;
 using Stock.Api.Models;
 
@@ -22,7 +23,7 @@ namespace Stock.Api.Repository
 
         public async Task<StockModel?> DeleteAsync(int id)
         {
-            var stock = await _context.Stocks.FirstOrDefaultAsync(stock => stock.Id == id);
+            var stock = await _context.Stocks.Include(c => c.Comments).FirstOrDefaultAsync(stock => stock.Id == id);
 
             if (stock == null)
                 return null;
@@ -33,22 +34,51 @@ namespace Stock.Api.Repository
             return stock;
         }
 
-        public async Task<List<StockModel>> GetAllAsync()
+        public async Task<List<StockModel>> GetAllAsync(StockQueryObject query)
         {
-            var stocks = await _context.Stocks.ToListAsync();
+            var stocks = _context.Stocks.Include(c => c.Comments).AsQueryable();
 
-            return stocks;
+            if (!string.IsNullOrWhiteSpace(query.Symbol))
+            {
+                stocks = stocks.Where(s => s.CompanyName.Contains(query.Symbol)); ;
+            }
+
+            if (!string.IsNullOrWhiteSpace(query.CompanyName))
+            {
+                stocks = stocks.Where(s => s.CompanyName.Contains(query.CompanyName));
+            }
+
+            if (!string.IsNullOrWhiteSpace(query.SortBy))
+            {
+                if (string.Equals("Symbol", query.SortBy, StringComparison.Ordinal))
+                {
+                    stocks = query.IsDescending ? stocks.OrderByDescending(s => s.Symbol) : stocks.OrderBy(s => s.Symbol);
+                }
+                else if (string.Equals("CompanyName", query.SortBy, StringComparison.Ordinal))
+                {
+                    stocks = query.IsDescending ? stocks.OrderByDescending(s => s.CompanyName) : stocks.OrderBy(s => s.CompanyName);
+                }
+            }
+
+            var skip = (query.PageNumber - 1) * query.PageSize;
+
+            return await stocks.Skip(skip).Take(query.PageSize).ToListAsync();
         }
 
         public async Task<StockModel?> GetByIdAsync(int id)
         {
-            var stock = await _context.Stocks.FirstOrDefaultAsync(s => s.Id == id);
+            var stock = await _context.Stocks.Include(c => c.Comments).FirstOrDefaultAsync(s => s.Id == id);
             if (stock == null)
             {
                 return null;
             }
 
             return stock;
+        }
+
+        public async Task<bool> IsStockExist(int id)
+        {
+            return await _context.Stocks.AnyAsync(c => c.Id == id);
         }
 
         public async Task<StockModel?> UpdateAsync(int id, StockModel stock)

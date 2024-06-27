@@ -10,5 +10,6 @@ namespace Stock.Api.Data
     public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
     {
         public DbSet<StockModel> Stocks { get; set; }
+        public DbSet<Comment> Comments { get; set; }
     }
 }

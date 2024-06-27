@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Stock.Api.Dto.Stock;
+using Stock.Api.Helper;
 using Stock.Api.Interfaces;
 using Stock.Api.Mappers;
 using Stock.Api.Models;
@@ -17,11 +18,11 @@ namespace Stock.Api.Controllers
         private readonly IStockRepository _stockRepository = stockRepository;
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] StockQueryObject query)
         {
-            var stocks = await _stockRepository.GetAllAsync();
-
-            return Ok(stocks);
+            var stocks = await _stockRepository.GetAllAsync(query);
+            var stocksDto = stocks.Select(s => s.ToStockDto()).ToList();
+            return Ok(stocksDto);
         }
 
         [HttpGet("{id:int}")]
@@ -34,7 +35,7 @@ namespace Stock.Api.Controllers
                 return NotFound("Stock not found!");
             }
 
-            return Ok(stock);
+            return Ok(stock.ToStockDto());
         }
 
         [HttpPost]
@@ -59,7 +60,7 @@ namespace Stock.Api.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var stock = await stockRepository.UpdateAsync(id, stockDto.ToStockModelFromUpdateDto());
+            var stock = await _stockRepository.UpdateAsync(id, stockDto.ToStockModelFromUpdateDto());
             if (stock == null)
                 return Problem();
 
@@ -69,7 +70,7 @@ namespace Stock.Api.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete([FromRoute] int id)
         {
-            var stock = await stockRepository.DeleteAsync(id);
+            var stock = await _stockRepository.DeleteAsync(id);
 
             if (stock == null)
                 return Problem();

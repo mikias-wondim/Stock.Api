@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Stock.Api.Dto.Comment;
+using Stock.Api.Models;
 
 namespace Stock.Api.Dto.Stock
 {
@@ -14,5 +17,6 @@ namespace Stock.Api.Dto.Stock
         public decimal LastDiv { get; set; }
         public string Industry { get; set; } = string.Empty;
         public long MarketCap { get; set; }
+        public List<CommentDto> Comments { get; set; } = [];
     }
 }
