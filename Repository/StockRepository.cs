@@ -40,7 +40,7 @@ namespace Stock.Api.Repository
 
             if (!string.IsNullOrWhiteSpace(query.Symbol))
             {
-                stocks = stocks.Where(s => s.CompanyName.Contains(query.Symbol)); ;
+                stocks = stocks.Where(s => s.Symbol.Contains(query.Symbol)); ;
             }
 
             if (!string.IsNullOrWhiteSpace(query.CompanyName))
@@ -50,11 +50,11 @@ namespace Stock.Api.Repository
 
             if (!string.IsNullOrWhiteSpace(query.SortBy))
             {
-                if (string.Equals("Symbol", query.SortBy, StringComparison.Ordinal))
+                if (string.Equals("Symbol", query.SortBy, StringComparison.OrdinalIgnoreCase))
                 {
                     stocks = query.IsDescending ? stocks.OrderByDescending(s => s.Symbol) : stocks.OrderBy(s => s.Symbol);
                 }
-                else if (string.Equals("CompanyName", query.SortBy, StringComparison.Ordinal))
+                else if (string.Equals("CompanyName", query.SortBy, StringComparison.OrdinalIgnoreCase))
                 {
                     stocks = query.IsDescending ? stocks.OrderByDescending(s => s.CompanyName) : stocks.OrderBy(s => s.CompanyName);
                 }
